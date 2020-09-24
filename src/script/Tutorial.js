@@ -47,6 +47,19 @@ var axe = {
     type: EnchantType.axe,
     value: 5
 }
+var staff = {
+    id: 1266,
+    name: "Rainbow Staff",
+    texture: "rainbow_staff",
+    type: EnchantType.weapon,
+    value: 5,
+    damage: 5
+}
+var potion = {
+    id: 1267,
+    name: "Rainbow Potion",
+    texture: "rainbow_potion",
+}
 
 //implementing functions for items
 function newItem(v){
@@ -63,6 +76,11 @@ function newTool(v){
     Item.setEnchantType(v.id, v.type, v.value);
 }
 
+function newThrowable(v){
+    Item.defineThrowable(v.id, v.texture, 0, v.name);
+    Player.addItemCreativeInv(v.id, 1, 0);
+    Item.setCategory(v.id, ItemCategory.TOOL);
+}
 //main implementing
 newItem(rainbow);
 newTool(sword);
@@ -70,6 +88,8 @@ newTool(pickaxe);
 newTool(hoe);
 newTool(shovel);
 newTool(axe);
+newTool(staff);
+newThrowable(potion);
 
 //game hook
 function newLevel(){
@@ -82,6 +102,10 @@ function attackHook(attacker, victim){
         Entity.setHealth(victim, Entity.getHealth(victim) - sword.damage);
         Entity.addEffect(victim, MobEffect.wither, 900, 0, false, true);
     }
+    else if(Player.getCarriedItem() == staff.id){
+        Entity.setHealth(victim, Entity.getHealth(victim) - staff.damage);
+        Level.spawnMob(Entity.getX(victim), Entity.getY(victim)-1, Entity.getZ(victim), EntityType.LIGHTNING_BOLT);
+    }
 }
 
 function useItem(x, y, z, itemid, blockid){
@@ -90,6 +114,10 @@ function useItem(x, y, z, itemid, blockid){
     }
     else if(blockid == 2 && itemid == shovel.id){
         setTile(x, y, z, 198);
+    }
+    else if(itemid == staff.id){
+        Level.spawnMob(x, y, z, EntityType.LIGHTNING_BOLT);
+        setTile(x,y,z, 51, 0);
     }
 }
 
@@ -116,5 +144,12 @@ function procCmd(txt){
         clientMessage("X: " + Player.getX());
         clientMessage("Y: " + Player.getY());
         clientMessage("Z: " + Player.getZ());
+    }
+}
+
+function customThrowableHitBlockHook(projectile, itemid, x, y, z){
+    if(itemid == potion.id){
+        Level.explode(x, y, z, 10, true);
+        Level.addParticle(ParticleType.hugeexplosion, x, y, z, x, y, z, 10);
     }
 }
